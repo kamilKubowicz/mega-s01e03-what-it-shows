@@ -56,8 +56,9 @@ parser fix does not touch it: the form has to print the order it reads.
 These reports are not swaps. The invite lands a day early or late, or people in different places get
 different days for the same meeting: "Client in Lisbon got Tuesday. Client in Toronto got Monday."
 That points at time-zone conversion, not date order. The desk read them this way
-(`desk-notes.json`), but the kb's cause table still counts them under `parser` because of their
-tenant. The parser fix will not move them back.
+(`desk-notes.json`). Its cause table counts them where they are filed, under `parser` by their
+tenant, and so does the table above; they have their own ticket as well. The parser fix will not
+move them back.
 
 ## Why one ticket held them all
 

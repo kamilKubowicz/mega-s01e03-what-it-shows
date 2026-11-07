@@ -1,19 +1,12 @@
-// Which problem a merged report belongs to. causes.ts places a report by its tenant and the way it
-// came in; the desk's own reading (desk-notes.json) wins where it saw something else: a date that
-// moved by one day is not a day/month swap, whatever the tenant writes.
-import { causeOf, uniqueById, type Cause, type Report, type Tenant } from '#lib/kb/causes';
+// The problems inside a merged ticket, counted the desk's way. Causes come from the desk's own
+// cause table logic (groupByCause in causes.ts). On top of that, the desk's reading in
+// desk-notes.json: a report the desk read as a one-day move is its own problem, and it stays
+// counted where it is filed, as the desk's cause table counts it.
+import { groupByCause, readAs, uniqueById, type CauseGroup, type Report, type Tenant } from '#lib/kb/causes';
 
-export type Problem = Cause | 'one-day' | 'unplaced';
+export type Problem = CauseGroup['cause'] | 'one-day';
 
-// The order the desk reads them in, and the order their tickets were filed in.
-export const PROBLEMS: readonly Problem[] = ['parser', 'hint', 'one-day', 'unplaced'];
-
-export function problemOf(r: Report, t: Tenant | undefined, oneDayMove: readonly string[]): Problem {
-  if (oneDayMove.includes(r.id)) return 'one-day';
-  return causeOf(r, t) ?? 'unplaced';
-}
-
-export type ProblemGroup = {
+export type ProblemRow = {
   problem: Problem;
   reports: Report[];
   tenants: string[];
@@ -23,13 +16,28 @@ export type ProblemGroup = {
   taggedAs: Record<string, number>;
   firstSeen: string;
   lastSeen: string;
+  // Only for a problem the desk read on top of the causes: cause → how many of its reports are filed there.
+  filedUnder?: Record<string, number>;
 };
 
 const tally = (keys: string[]) => keys.reduce<Record<string, number>>((n, k) => ({ ...n, [k]: (n[k] ?? 0) + 1 }), {});
 
-export type Split = { rows: number; merged: Report[]; groups: ProblemGroup[] };
+function row(problem: Problem, reports: Report[]): ProblemRow {
+  const days = reports.map((r) => r.receivedAt.slice(0, 10)).sort();
+  return {
+    problem,
+    reports,
+    tenants: [...new Set(reports.map((r) => r.tenant))].sort(),
+    channels: tally(reports.map((r) => r.channel)),
+    taggedAs: tally(reports.map((r) => r.meta.intakeTag)),
+    firstSeen: days[0],
+    lastSeen: days[days.length - 1],
+  };
+}
 
-// Every report merged into `ticket`, once, split by problem. `rows` is the export before de-duplication.
+export type Split = { rows: number; merged: Report[]; causes: ProblemRow[]; read: ProblemRow[] };
+
+// Every report merged into `ticket`, once. `rows` is the export before de-duplication.
 export function splitTicket(
   rows: Report[],
   ticket: number,
@@ -37,18 +45,15 @@ export function splitTicket(
   oneDayMove: readonly string[],
 ): Split {
   const merged = uniqueById(rows).filter((r) => r.mergedInto === ticket);
-  const groups = PROBLEMS.map((problem) => {
-    const reports = merged.filter((r) => problemOf(r, tenantOf(r), oneDayMove) === problem);
-    const days = reports.map((r) => r.receivedAt.slice(0, 10)).sort();
-    return {
-      problem,
-      reports,
-      tenants: [...new Set(reports.map((r) => r.tenant))].sort(),
-      channels: tally(reports.map((r) => r.channel)),
-      taggedAs: tally(reports.map((r) => r.meta.intakeTag)),
-      firstSeen: days[0],
-      lastSeen: days[days.length - 1],
-    };
-  }).filter((g) => g.reports.length > 0);
-  return { rows: rows.length, merged, groups };
+  const groups = groupByCause(merged, tenantOf);
+  const oneDay = merged.filter((r) => oneDayMove.includes(r.id));
+  const filedUnder = Object.fromEntries(
+    groups.map((g) => [g.cause, readAs(g, oneDayMove)] as const).filter(([, n]) => n > 0),
+  );
+  return {
+    rows: rows.length,
+    merged,
+    causes: groups.map((g) => row(g.cause, g.reports)),
+    read: oneDay.length ? [{ ...row('one-day', oneDay), filedUnder }] : [],
+  };
 }
