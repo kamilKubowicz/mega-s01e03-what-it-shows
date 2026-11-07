@@ -6,12 +6,19 @@
   import { splitTicket, type Problem, type ProblemRow } from '#lib/kb/problems';
 
   // `issues`: where each problem is tracked now, problem → ticket URL.
+  // `status`: where each problem stands, in words, problem → status.
   // `list`: problems whose reports are listed in full under the table.
   let {
     ticket,
     issues = {},
+    status = {},
     list = [],
-  }: { ticket: number; issues?: Partial<Record<Problem, string>>; list?: Problem[] } = $props();
+  }: {
+    ticket: number;
+    issues?: Partial<Record<Problem, string>>;
+    status?: Partial<Record<Problem, string>>;
+    list?: Problem[];
+  } = $props();
 
   const split = $derived(splitTicket(reports as Report[], ticket, tenantOf, notes.oneDayMove));
   const all = $derived([...split.causes, ...split.read]);
@@ -37,7 +44,7 @@
 
 <table>
   <thead>
-    <tr><th>problem</th><th>reports</th><th>tenants</th><th>came in by</th><th>intake tagged as</th><th>seen</th><th>ticket</th></tr>
+    <tr><th>problem</th><th>reports</th><th>tenants</th><th>came in by</th><th>intake tagged as</th><th>seen</th><th>ticket</th><th>status</th></tr>
   </thead>
   <tbody>
     {#each all as g (g.problem)}
@@ -51,13 +58,14 @@
         <td>
           {#if issues[g.problem]}<a href={issues[g.problem]}>{label(issues[g.problem] ?? '')}</a>{:else}no ticket yet{/if}
         </td>
+        <td class="small">{status[g.problem] ?? ''}</td>
       </tr>
     {/each}
   </tbody>
   <tfoot>
     <tr>
       <td>by cause</td><td>{byCause}</td>
-      <td colspan="5" class="small">
+      <td colspan="6" class="small">
         {byCause === split.merged.length ? 'every merged report is in exactly one cause row' : 'cause rows do not add up — check causes.ts'}{#if split.read.length}; the desk's reading is counted again where it is filed, as on the desk's cause table{/if}
       </td>
     </tr>
@@ -82,7 +90,7 @@
   .small { color: var(--muted); font-size: 0.85em; }
   td .small { display: block; }
   .seen { white-space: nowrap; }
-  .open td:last-child { color: var(--warn); font-weight: 600; }
+  .open td:nth-last-child(2) { color: var(--warn); font-weight: 600; }
   .read td { border-top: 1px dashed var(--line); }
   tfoot td { font-weight: 600; border-bottom: none; }
   caption { text-align: left; color: var(--muted); font-size: 0.85rem; padding-bottom: 0.25rem; }

@@ -16,9 +16,12 @@ exported 2026-10-04). Everything after it is listed here.
 
 One issue per problem in desk ticket #4471, each with the number of reports it covers:
 
-- [#1](../../issues/1) `parser`: the shared parser reads dates month first
-- [#2](../../issues/2) `hint`: booking-v3 tells day-first tenants to type the month first
-- [#3](../../issues/3) `one-day`: invites move by one day (not a day/month swap)
+- [#1](../../issues/1) `parser`: the shared parser reads dates month first. Closed: fixed with
+  #4471 on 5 October (`fix(dates): parse dd/mm for eu locales`).
+- [#2](../../issues/2) `hint`: booking-v3 tells day-first tenants to type the month first. Closed:
+  won't fix, the booking-v3 form is retired.
+- [#3](../../issues/3) `one-day`: invites move by one day (not a day/month swap). **Open**: the
+  engineering update on #4471 does not cover it.
 
 ## Build frame
 

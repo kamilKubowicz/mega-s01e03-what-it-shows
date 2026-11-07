@@ -18,38 +18,47 @@ signature: 'Kamil Kubowicz'
     hint: 'https://github.com/kamilKubowicz/mega-s01e03-what-it-shows/issues/2',
     'one-day': 'https://github.com/kamilKubowicz/mega-s01e03-what-it-shows/issues/3',
   };
+
+  // Where each problem stands, from engineering's update on #4471 (closed 5 October).
+  const status = {
+    parser: 'fixed 5 Oct: fix(dates): parse dd/mm for eu locales',
+    hint: "won't fix: booking-v3 form retired",
+    'one-day': 'open: not in the engineering update',
+  };
 </script>
 
-[#4471](/kb/incidents/4471) is filed as one known issue: the parser reads dates month first,
-one fix is queued. Its own cause table already disagrees, and the desk's notes go further. Read
-by cause, the reports merged into it are separate problems. Each now has a ticket of its own.
+[#4471](/kb/incidents/4471) was filed as one known issue: the parser reads dates month first.
+Engineering closed it on 5 October. Read by cause, and with the desk's own notes, the reports merged
+into it were separate problems. Each has a ticket of its own, and one of them is still open.
 
 <Callout kind="warn">
-The queued parser fix closes only the <code>parser</code> row. The other rows keep coming in after it ships.
+#4471 is closed, but the <code>one-day</code> problem is not fixed. Engineering's update covers
+<code>parser</code> and <code>hint</code> only. Keep its ticket open.
 </Callout>
 
-## What is in #4471
+## What was in #4471
 
-<ProblemSplit ticket={4471} {issues} list={['one-day']} />
+<ProblemSplit ticket={4471} {issues} {status} list={['one-day']} />
 
-Counts come from the ticket export at render time, so they move as the desk merges more reports.
+Counts come from the ticket export at render time, the way the desk's cause table counts them.
 Change the logic in `src/lib/kb/problems.ts`, not the numbers here.
 
 ## The problems
 
-### `parser`: the shared parser reads dates month first
+### `parser`: the shared parser read dates month first
 
-Every tenant on file writes the day first. The shared parser reads every date month first, so a
-date whose day is 12 or less comes out with day and month swapped: "Booked for 2 December. The
-invite says 12 February." It reaches every tenant, through the app, email and the booking-v2 form.
-This is the problem #4471 was named for, and the one the queued fix is for.
+Every tenant on file writes the day first. The shared parser read every date month first, so a
+date whose day is 12 or less came out with day and month swapped: "Booked for 2 December. The
+invite says 12 February." It reached every tenant, through the app, email and the booking-v2 form.
+This is the problem #4471 was named for. **Fixed** on 5 October: `fix(dates): parse dd/mm for eu
+locales`.
 
-### `hint`: booking-v3 tells day-first tenants to type month first
+### `hint`: booking-v3 told day-first tenants to type month first
 
-booking-v3 prints `MM/DD/YYYY` under its date field. People do what the hint says and type the month
-first; the form then reads the date the tenant's way, day first. Only reports that came in through
-the form of a tenant on booking-v3 have this cause. The swap looks the same as `parser`, but the
-parser fix does not touch it: the form has to print the order it reads.
+booking-v3 printed `MM/DD/YYYY` under its date field. People did what the hint said and typed the
+month first; the form then read the date the tenant's way, day first. Only reports that came in
+through the form of a tenant on booking-v3 have this cause. The parser fix does not touch it.
+**Won't fix**: the booking-v3 form is retired, so no new reports can come in this way.
 
 ### `one-day`: the date moves by one day
 
@@ -57,8 +66,8 @@ These reports are not swaps. The invite lands a day early or late, or people in 
 different days for the same meeting: "Client in Lisbon got Tuesday. Client in Toronto got Monday."
 That points at time-zone conversion, not date order. The desk read them this way
 (`desk-notes.json`). Its cause table counts them where they are filed, under `parser` by their
-tenant, and so does the table above; they have their own ticket as well. The parser fix will not
-move them back.
+tenant, and so does the table above; they have their own ticket as well. **Still open**: the parser
+fix does not move a date by a day, and engineering's update does not mention this problem.
 
 ## Why one ticket held them all
 
@@ -72,8 +81,9 @@ move them back.
 
 ## What the desk does now
 
-- Keep #4471 for `parser`. Track `hint` and `one-day` in their own tickets, linked in the table.
-- Do not close the tickets when the parser fix ships; re-check this page against new reports first.
+- `parser` and `hint` are closed with #4471. `one-day` stays open until someone fixes how invite
+  times are converted between time zones.
+- A new report about a date that moved by one day goes to the `one-day` ticket, not to #4471.
 - Merging on subject alone put different causes in one ticket. Changing that rule needs a new
   decision record that replaces 0001; this page does not change 0001.
 
