@@ -1,0 +1,79 @@
+---
+layout: runbook
+title: '#4471 · what the merged reports show'
+owner: Kamil Kubowicz
+status: open
+reviewed: 2026-11-07
+signature: 'Kamil Kubowicz'
+---
+
+<script>
+  import ProblemSplit from '#lib/kb/ProblemSplit.svelte';
+  import Callout from '#lib/kb/Callout.svelte';
+  import RenderStamp from '#lib/kb/RenderStamp.svelte';
+
+  // Where each problem is tracked now.
+  const issues = {
+    parser: 'https://github.com/kamilKubowicz/mega-s01e03-what-it-shows/issues/1',
+    hint: 'https://github.com/kamilKubowicz/mega-s01e03-what-it-shows/issues/2',
+    'one-day': 'https://github.com/kamilKubowicz/mega-s01e03-what-it-shows/issues/3',
+  };
+</script>
+
+[#4471](/kb/incidents/4471) is filed as one known issue: the parser reads dates month first,
+one fix is queued. Its own cause table already disagrees, and the desk's notes go further. Read
+by cause, the reports merged into it are separate problems. Each now has a ticket of its own.
+
+<Callout kind="warn">
+The queued parser fix closes only the <code>parser</code> row. The other rows keep coming in after it ships.
+</Callout>
+
+## What is in #4471
+
+<ProblemSplit ticket={4471} {issues} list={['one-day']} />
+
+Counts come from the ticket export at render time, so they move as the desk merges more reports.
+Change the logic in `src/lib/kb/problems.ts`, not the numbers here.
+
+## The problems
+
+### `parser`: the shared parser reads dates month first
+
+Every tenant on file writes the day first. The shared parser reads every date month first, so a
+date whose day is 12 or less comes out with day and month swapped: "Booked for 2 December. The
+invite says 12 February." It reaches every tenant, through the app, email and the booking-v2 form.
+This is the problem #4471 was named for, and the one the queued fix is for.
+
+### `hint`: booking-v3 tells day-first tenants to type month first
+
+booking-v3 prints `MM/DD/YYYY` under its date field. People do what the hint says and type the month
+first; the form then reads the date the tenant's way, day first. Only reports that came in through
+the form of a tenant on booking-v3 have this cause. The swap looks the same as `parser`, but the
+parser fix does not touch it: the form has to print the order it reads.
+
+### `one-day`: the date moves by one day
+
+These reports are not swaps. The invite lands a day early or late, or people in different places get
+different days for the same meeting: "Client in Lisbon got Tuesday. Client in Toronto got Monday."
+That points at time-zone conversion, not date order. The desk read them this way
+(`desk-notes.json`), but the kb's cause table still counts them under `parser` because of their
+tenant. The parser fix will not move them back.
+
+## Why one ticket held them all
+
+- [Decision 0001](/kb/decisions/0001-dedupe-by-subject) merges reports whose subjects match. Subjects
+  describe the symptom ("Wrong day on the invite"), and every problem here has the same symptom.
+  The same subject lines turn up under different problems.
+- Intake's tag is a guess from the reporter's browser. The "intake tagged as" column shows it
+  disagrees with the problem in every row; the tag is not a cause.
+- The export repeats some reports across overlapping pages. Counting rows instead of ids
+  overstates the ticket.
+
+## What the desk does now
+
+- Keep #4471 for `parser`. Track `hint` and `one-day` in their own tickets, linked in the table.
+- Do not close the tickets when the parser fix ships; re-check this page against new reports first.
+- Merging on subject alone put different causes in one ticket. Changing that rule needs a new
+  decision record that replaces 0001; this page does not change 0001.
+
+<RenderStamp {signature} />
