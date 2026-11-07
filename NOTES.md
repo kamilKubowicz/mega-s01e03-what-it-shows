@@ -6,7 +6,7 @@ exported 2026-10-04). Everything after it is listed here.
 ## The page
 
 - `src/routes/kb/incidents/4471/problems/+page.svx`: **#4471 · what the merged reports show**,
-  signed by Kamil Kubowicz (desk ref `DR-K5PW-C79S`).
+  owned by Kamil Kubowicz, signed with the course ticket for this Challenge (desk ref `DR-399G-ZS8H`).
 - `rendered/kb/incidents/4471/problems.html`: the same page as the desk sees it, built from the
   export and saved as one standalone HTML file.
 - `src/lib/kb/problems.ts` and `src/lib/kb/ProblemSplit.svelte`: the logic and the table the page

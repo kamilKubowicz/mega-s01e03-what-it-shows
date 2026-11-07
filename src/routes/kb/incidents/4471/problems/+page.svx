@@ -4,7 +4,7 @@ title: '#4471 · what the merged reports show'
 owner: Kamil Kubowicz
 status: open
 reviewed: 2026-11-07
-signature: 'Kamil Kubowicz'
+signature: 'v1.eyJzdWIiOiIxMTQyMyIsImF1ZCI6ImNoYWxsZW5nZTp3aGF0LWl0LXNob3dzIiwiaWF0IjoxNzk0MDYyNDcxLCJleHAiOjE3OTQxNDg4NzF9.iVyULMPTcsipEzh5mpzPmefb1tuCYC5F9k0QxXKyew4'
 ---
 
 <script>
